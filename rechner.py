@@ -6,8 +6,12 @@ RE_FLOAT = re.compile('^(-?[0-9]+)(\.[0-9]+)?$')
 class FormelParseException(Exception):
 	pass
 
-class CalculateException(Exception):
+class FormelCalculateException(Exception):
 	pass
+
+class Variable:
+	def __init__(self, value):
+		self.value = value
 
 class Formel:
 	
@@ -61,6 +65,7 @@ class Formel:
 						formel.append(content)
 						content = ''
 					else:
+	#					formel.append(content)
 						raise FormelParseException('unexpected function: '+content)
 				
 				if s in '+-*/()^,':
@@ -102,7 +107,7 @@ class Formel:
 		for f in formel:
 			if isinstance(f, str):
 				if f in Formel.OPERATOREN:
-					if lastf in Formel.OPERATOREN:
+					if lastf in Formel.OPERATOREN or lastf == '(':
 						if f in '+-':
 							if not sign is None:
 								raise FormelParseException('only one sign')
@@ -142,22 +147,27 @@ class Formel:
 				else:
 					raise FormelParseException('syntax error near: '+f)
 			else:
+				# if the first f is a sign
+				if lastf in Formel.OPERATOREN and len(output) == 0:
+					sign = lastf	
+					stack.pop()
+
 				if sign == '-':
 					output.append(-f)
 					sign = None
 				else:
 					output.append(f)
 
-			
 			lastf = f
 		
 		if not ')' in stack and '(' in stack:
 			raise FormelParseException('left parenthesis found, not right')
-	
-		if stack[-1] in Formel.OPERATOREN:
-			raise FormelParseException('syntax error near: '+stack[-1])
 		# the stack list will be reverse add on the output list
 		output.extend(reversed(stack))
+		
+		if output[-1] in Formel.OPERATOREN and len(output)<3:
+			raise FormelParseException('syntax error near: '+output[-1])
+		
 		self._UPN = output		
 		return self._UPN 
 		
@@ -251,6 +261,11 @@ digraph formel
 			if p in Formel.OPERATOREN:
 				b = stack.pop()
 				a = stack.pop()
+
+				if p == '^':
+					if b != int(b) and a <= 0:
+						raise FormelCalculateException('square root from negative float')
+					
 				stack.append(Formel.OPERATOREN[p](a,b))
 	
 			elif p in Formel.FUNCTIONS:
@@ -268,7 +283,7 @@ digraph formel
 		if len(stack) > 0:
 			return stack[0]
 		else:
-			raise CalculateException("result is empty")
+			raise FormelCalculateException("result is empty")
 		
 
 if '--graphviz' in sys.argv[1:]:
@@ -279,12 +294,11 @@ if '--graphviz' in sys.argv[1:]:
 
 
 
-
 if __name__ == "__main__":
 
 	#print(Formel('sin cos3+4').asUPN())
 	#print(Formel('cos3)').asUPN())
-	print(Formel('3+)').asUPN())
+	#print(Formel('10*a').calculate())
 	
 	for (formel, asList, asUPN, asTree, result) in [
 		(
