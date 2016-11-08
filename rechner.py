@@ -12,7 +12,16 @@ class FormelCalculateException(Exception):
 class Variable:
 	def __init__(self, value):
 		self.value = value
+	
+	def __repr__(self):
+		return "<Variable %s>" % (self.value,)
+	
+	def __eq__(self, other):
+		if not isinstance(other, Variable):
+			return False
 
+		return self.value == other.value
+		
 class Formel:
 	
 	FUNCTIONS = {
@@ -54,7 +63,7 @@ class Formel:
 		content = ''
 		#the loop collects operators, numbers and spaces
 		#here will build the formel list
-		for s in self._formel:
+		for s in self._formel+' ':
 			if s.isalpha():
 				content+=s
 				
@@ -65,8 +74,12 @@ class Formel:
 						formel.append(content)
 						content = ''
 					else:
-	#					formel.append(content)
-						raise FormelParseException('unexpected function: '+content)
+						if s.isdigit() or s in '.':
+							content += s
+							s = ' '
+						else:
+							formel.append(Variable(content))
+							content = ''
 				
 				if s in '+-*/()^,':
 					if number != '':
@@ -80,14 +93,7 @@ class Formel:
 						formel.append(number)
 					number = ''
 
-			
-			
-		#in addition, the last number will be save here 
-		if number != '':
-			formel.append(number)
-
-
-		return [(float(f) if RE_FLOAT.match(f) else f) for f in formel]
+		return [(float(f) if not isinstance(f, Variable) and RE_FLOAT.match(f) else f) for f in formel]
 
 	def asUPN(self):
 		"""
@@ -107,7 +113,7 @@ class Formel:
 		for f in formel:
 			if isinstance(f, str):
 				if f in Formel.OPERATOREN:
-					if lastf in Formel.OPERATOREN or lastf == '(':
+					if isinstance(lastf, str) and lastf in Formel.OPERATOREN or lastf == '(':
 						if f in '+-':
 							if not sign is None:
 								raise FormelParseException('only one sign')
@@ -148,11 +154,14 @@ class Formel:
 					raise FormelParseException('syntax error near: '+f)
 			else:
 				# if the first f is a sign
-				if lastf in Formel.OPERATOREN and len(output) == 0:
-					sign = lastf	
-					stack.pop()
+				if isinstance(lastf, str):
+					if lastf in Formel.OPERATOREN and len(output) == 0:
+						sign = lastf	
+						stack.pop()
 
 				if sign == '-':
+					if isinstance(f, Variable):
+						raise FormelParseException("'-' <Variable> does not match")
 					output.append(-f)
 					sign = None
 				else:
@@ -176,7 +185,7 @@ class Formel:
 
 		stack = []
 		for p in self._UPN:
-			if p in Formel.OPERATOREN:
+			if isinstance(p, str) and p in Formel.OPERATOREN:
 				if len(stack) > 1:
 					b = stack.pop()
 					a = stack.pop()
@@ -185,7 +194,7 @@ class Formel:
 				else:
 					a = stack.pop()
 					stack.append((p, a))
-			elif p in Formel.FUNCTIONS:
+			elif isinstance(p, str) and p in Formel.FUNCTIONS:
 				args = []
 	
 				for i in range(Formel.FUNCTIONS[p][0]):
@@ -212,7 +221,7 @@ class Formel:
 			"""
 			graph = []
 		
-			if isinstance(tree, float):
+			if isinstance(tree, float) or isinstance(tree, Variable):
 				idx = last
 				last+= 1
 	
@@ -249,7 +258,7 @@ digraph formel
 
 
 
-	def calculate(self):
+	def calculate(self, **kwargs):
 		"""
 		Here will be calculate the result with the right
 		operators and functions.
@@ -258,7 +267,7 @@ digraph formel
 		stack = []
 		
 		for p in self._UPN:
-			if p in Formel.OPERATOREN:
+			if isinstance(p, str) and p in Formel.OPERATOREN:
 				b = stack.pop()
 				a = stack.pop()
 
@@ -268,7 +277,7 @@ digraph formel
 					
 				stack.append(Formel.OPERATOREN[p](a,b))
 	
-			elif p in Formel.FUNCTIONS:
+			elif isinstance(p, str) and p in Formel.FUNCTIONS:
 				(count, calcfunc) = Formel.FUNCTIONS[p]
 				
 				args = []
@@ -277,6 +286,11 @@ digraph formel
 					args.append(stack.pop())
 				stack.append(calcfunc(*args))
 
+			elif isinstance(p, Variable):
+				try:
+					stack.append(kwargs[p.value])
+				except KeyError:
+					raise FormelCalculateException("%s is not defined" % (p.value))
 			else:
 				stack.append(p)
 
@@ -287,7 +301,7 @@ digraph formel
 		
 
 if '--graphviz' in sys.argv[1:]:
-	f = Formel('4--4')	
+	f = Formel('10*a-x24x')
 	print(f.asGraphViz())
 	sys.exit()
 
@@ -298,7 +312,9 @@ if __name__ == "__main__":
 
 	#print(Formel('sin cos3+4').asUPN())
 	#print(Formel('cos3)').asUPN())
-	#print(Formel('10*a').calculate())
+	print(Formel('10*a-x24xsin+1').asUPN())
+	#calculate(a = 2, x24xsin = 1))
+	#calculate(a = 42, x = 1))
 	
 	for (formel, asList, asUPN, asTree, result) in [
 		(
