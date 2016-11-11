@@ -79,11 +79,13 @@ class Formel:
 							content += s
 							s = ' '
 						else:
-							formel.append(Variable(content))
 							
 							if number != '':
+									formel.append(number)
+									number = ''
 									formel.append('*')
 							
+							formel.append(Variable(content))
 							content = ''
 				
 				if s in '+-*/()^,':
@@ -320,7 +322,7 @@ if __name__ == "__main__":
 
 	#print(Formel('sin cos3+4').asUPN())
 	#print(Formel('cos3)').asUPN())
-	print(Formel('10a+1').asList())
+	print(Formel('10a^2+1').asUPN())
 	#calculate(a = 2, x24xsin = 1))
 	#calculate(a = 42, x = 1))
 	

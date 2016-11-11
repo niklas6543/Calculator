@@ -17,7 +17,8 @@ class TestConvert(unittest.TestCase):
 		self.assertEqual(Formel('-4+5').asUPN(),  [-4, 5, '+'])
 		self.assertEqual(Formel('10*a-x245').asUPN(), [10.0, Variable('a'), '*', Variable('x245'), '-'])
 		self.assertEqual(Formel('10*a-x245sin').asUPN(), [10.0, Variable('a'), '*', Variable('x245sin'), '-'])
-		self.assertEqual(Formel('10a-2').asUPN(), [Variable('a'), 10.0, '*', 2.0, '-'])
+		self.assertEqual(Formel('10a^2-2').asUPN(), [10.0, Variable('a'), 2.0, '^', '*', 2.0, '-'])
+		self.assertEqual(Formel('10a-2').asUPN(), [10.0, Variable('a'), '*', 2.0, '-'])
 
 	def test_calaculate(self):
 		self.assertEqual(Formel('4^2').calculate(),  16)
