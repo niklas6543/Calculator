@@ -101,7 +101,8 @@ class Formel:
 					if number != '':
 						formel.append(number)
 					number = ''
-
+				else:
+					raise FormelParseException("unknown symbol like: %s" % (s))
 
 		return [(float(f) if not isinstance(f, Variable) and RE_FLOAT.match(f) else f) for f in formel]
 
@@ -119,6 +120,9 @@ class Formel:
 		lastf = None
 		sign = None
 		func = False
+		
+		if not isinstance(formel[-1], Variable) and formel[-1] in Formel.OPERATOREN:
+			raise FormelParseException('syntax error near: '+formel[-1])
 
 		for f in formel:
 			if isinstance(f, str):
@@ -184,8 +188,8 @@ class Formel:
 		# the stack list will be reverse add on the output list
 		output.extend(reversed(stack))
 		
-		if output[-1] in Formel.OPERATOREN and len(output)<3:
-			raise FormelParseException('syntax error near: '+output[-1])
+		#if output[-1] in Formel.OPERATOREN and len(output)<4:
+			#raise FormelParseException('syntax error near: '+output[-1])
 		
 		self._UPN = output		
 		return self._UPN 
@@ -322,7 +326,7 @@ if __name__ == "__main__":
 
 	#print(Formel('sin cos3+4').asUPN())
 	#print(Formel('cos3)').asUPN())
-	print(Formel('10a^2+1').asUPN())
+	print(Formel('1+b').asUPN())
 	#calculate(a = 2, x24xsin = 1))
 	#calculate(a = 42, x = 1))
 	

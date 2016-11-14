@@ -33,13 +33,16 @@ class TestConvert(unittest.TestCase):
 		calc = lambda f:Formel(f).calculate(a = 42)
 		self.assertRaisesRegex(FormelParseException, "right parenthesis found, not left", upn, "3+4)")
 		self.assertRaisesRegex(FormelParseException, "syntax error near: *", upn, "7*")
-		self.assertRaisesRegex(FormelParseException, "duplicate operator found", upn, "(3*/")
+#		self.assertRaisesRegex(FormelParseException, "duplicate operator found", upn, "(3*/")
+		self.assertRaisesRegex(FormelParseException, "syntax error near: /", upn, "(3*/")
 		self.assertRaisesRegex(FormelParseException, "left parenthesis found, not right", upn, "sin(")
 		self.assertRaisesRegex(FormelParseException, "right parenthesis found, not left", upn, "cos)")
 		self.assertRaisesRegex(FormelParseException, "only one sign", upn, "1---1")
 		self.assertRaisesRegex(FormelCalculateException, "square root from negative float", calc, "-10^(1/2)")
 		self.assertRaisesRegex(FormelParseException, "'-' <Variable> does not match", calc, "10--a")
 		self.assertRaisesRegex(FormelCalculateException, "x is not defined", calc, "10*a-x")
+		self.assertRaisesRegex(FormelParseException, "syntax error near: +", upn, "a^2+")
+		self.assertRaisesRegex(FormelParseException, "unknown symbol like: \$", upn, "a^2$")
 
 if __name__ == "__main__":
 	unittest.main()
