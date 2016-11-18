@@ -143,11 +143,10 @@ class Formel:
 					stack.append(f)
 				elif f == ')':
 					if not '(' in stack :
-						raise FormelParseException('right parenthesis found, not left')
+						raise FormelParseException('right parenthesis found but no left')
 					
 					while len(stack) > 0:
 						p = stack.pop()
-
 						if p == '(':
 							break
 						
@@ -184,7 +183,7 @@ class Formel:
 			lastf = f
 		
 		if not ')' in stack and '(' in stack:
-			raise FormelParseException('left parenthesis found, not right')
+			raise FormelParseException('left parenthesis found but no right')
 		# the stack list will be reverse add on the output list
 		output.extend(reversed(stack))
 		
@@ -212,7 +211,11 @@ class Formel:
 				args = []
 	
 				for i in range(Formel.FUNCTIONS[p][0]):
-					args.append(stack.pop())
+					if len(stack) != 0:
+						args.append(stack.pop())
+					else:
+						raise FormelCalculateException('function parameter not found')
+
 				args.reverse()
 				stack.append(tuple([p]+args))
 			else:
@@ -284,7 +287,7 @@ digraph formel
 			if isinstance(p, str) and p in Formel.OPERATOREN:
 				b = stack.pop()
 				a = stack.pop()
-
+				
 				if p == '^':
 					if b != int(b) and a <= 0:
 						raise FormelCalculateException('square root from negative float')
@@ -326,7 +329,8 @@ if __name__ == "__main__":
 
 	#print(Formel('sin cos3+4').asUPN())
 	#print(Formel('cos3)').asUPN())
-	print(Formel('1+b').asUPN())
+	print(Formel('1+sin').calculate())
+	print('#')
 	#calculate(a = 2, x24xsin = 1))
 	#calculate(a = 42, x = 1))
 	
