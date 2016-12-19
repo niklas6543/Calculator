@@ -12,7 +12,7 @@ class TestConvert(unittest.TestCase):
 
 	def test_asUPN(self):
 		self.assertEqual(Formel('3+4 * 5+8').asUPN(), [3.0, 4.0, 5.0, '*', 8.0, '+', '+'])
-		self.assertEqual(Formel('(log(5,3)-6)+(sin(3)/(5-2))').asUPN(),  [5.0, 3.0, 'log', 6.0, '-', 3.0, 'sin', 5.0, 2.0, '-', '/', '+'])
+		self.assertEqual(Formel('(log(5, 3)-6)+(sin(3)/(5-2))').asUPN(),  [5.0, 3.0, 'log', 6.0, '-', 3.0, 'sin', 5.0, 2.0, '-', '/', '+'])
 		self.assertEqual(Formel('4+-5*6').asUPN(),  [4, -5,  6, '*', '+'])
 		self.assertEqual(Formel('-4+5').asUPN(),  [-4, 5, '+'])
 		self.assertEqual(Formel('10*a-x245').asUPN(), [10.0, Variable('a'), '*', Variable('x245'), '-'])
@@ -26,7 +26,7 @@ class TestConvert(unittest.TestCase):
 		self.assertEqual(Formel('-10^(-1)').calculate(),  -0.1)
 		self.assertEqual(Formel('-10^-1').calculate(),  -0.1)
 		self.assertEqual(Formel('10*a-x24x+1').calculate(a = 2, x24x = 1), 18)
-
+		self.assertEqual(Formel('1,2').calculate(), 1.2)
 		
 	def test_error(self):
 		upn = lambda f:Formel(f).asUPN()

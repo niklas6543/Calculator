@@ -10,6 +10,9 @@ class FormelCalculateException(Exception):
 	pass
 
 class Variable:
+	"""
+	Converts a string into a variable object
+	"""
 	def __init__(self, value):
 		self.value = value
 	
@@ -56,51 +59,73 @@ class Formel:
 		As a result, the function gives a list of these.
 
 		Invalid input will be raise an ValueError!
-
 		"""
 		formel = []
 		number = ''
 		content = ''
+		comma = False
 		#the loop collects operators, numbers and spaces
 		#here will build the formel list
 		for s in self._formel+' ':
-			if s.isalpha():
-				content+=s
-
+			if s.isalpha() or content != '' and s.isdigit():
 				
+				if number != '':
+					formel.append(number)
+					number = ''
+					if not comma:
+						formel.append('*')
+
+				if comma:
+					formel.append(',')
+					comma = False
+				
+				content += s
+
 			else:
-					
 				if content != '':
 					if content in Formel.FUNCTIONS:
 						formel.append(content)
 						content = ''
 					else:
-						if s.isdigit() or s in '.':
-							content += s
-							s = ' '
-						else:
-							
-							if number != '':
-									formel.append(number)
-									number = ''
-									formel.append('*')
-							
-							formel.append(Variable(content))
-							content = ''
+						formel.append(Variable(content))
+						content = ''
 				
-				if s in '+-*/()^,':
+				if s in '+-*/()^':
 					if number != '':
-
 						formel.append(number)
 					
 					formel.append(s)
 					number = ''
-				elif s.isdigit() or s in '.':
+				elif s == ',':
+					if number == '':
+						formel.append(s)
+					elif comma:
+						formel.append(number)
+						formel.append(s)
+						formel.append(s)
+
+						comma = False
+						number = ''
+					else:
+						comma = True
+						
+				elif s.isdigit():
+					if comma:
+						number += '.'
+						comma = False
+						#teste 2 Komma
+					
 					number += s
+
 				elif s.isspace():
 					if number != '':
 						formel.append(number)
-					number = ''
+						number = ''
+
+					if comma:
+						formel.append(',')
+						comma = False
+
 				else:
 					raise FormelParseException("unknown symbol like: %s" % (s))
 
@@ -120,6 +145,7 @@ class Formel:
 		lastf = None
 		sign = None
 		func = False
+		comma = False
 		
 		if not isinstance(formel[-1], Variable) and formel[-1] in Formel.OPERATOREN:
 			raise FormelParseException('syntax error near: '+formel[-1])
@@ -157,6 +183,7 @@ class Formel:
 
 					func = False
 				elif f == ',':
+
 					while len(stack) > 0 and stack[-1] != '(':
 						output.append(stack.pop())
 
@@ -194,6 +221,9 @@ class Formel:
 		return self._UPN 
 		
 	def asTree(self):
+		"""
+		Converts UPN into a tree notation
+		"""
 		self.asUPN()
 
 		stack = []
@@ -230,11 +260,13 @@ class Formel:
 	
 		"""
 		
-	#	self.log(stack, self._UPN)	
+		#self.log(stack, self._UPN)	
 		
 		def _recursegraph(tree, last=0): 
 			"""
-			The function goes recursive through the UPN tuple.
+			Goes recursive through the UPN tuple.
+			
+			tree: tuple
 			"""
 			graph = []
 		
@@ -317,6 +349,26 @@ digraph formel
 			raise FormelCalculateException("result is empty")
 		
 
+	def points(self, minX=-10, maxX=10, minY=-10, maxY=10, canvasHeight=300, canvasWidth=600, **eqVar):
+		"""
+		Scales the points to the right size
+		"""
+		result = []
+
+		xPoint = minX
+		pixel = (maxX-minX)/canvasWidth
+		pixel2 = (maxY-minY)/canvasHeight
+		
+		
+		while (xPoint<=maxX):
+			yPoint = self.calculate(x=xPoint, **{k: v for (k, v) in eqVar.items() if k != 'x'})
+				
+
+			result.append((xPoint, yPoint))
+			xPoint+=pixel
+		
+		return result
+
 if '--graphviz' in sys.argv[1:]:
 	f = Formel('10*a-x24x')
 	print(f.asGraphViz())
@@ -329,7 +381,7 @@ if __name__ == "__main__":
 
 	#print(Formel('sin cos3+4').asUPN())
 	#print(Formel('cos3)').asUPN())
-	print(Formel('1+sin').calculate())
+	print(Formel('1,2+3').calculate())
 	print('#')
 	#calculate(a = 2, x24xsin = 1))
 	#calculate(a = 42, x = 1))
@@ -343,7 +395,7 @@ if __name__ == "__main__":
 			31.0,
 		),
 		(
-			'(log(5,3)-6)+(sin(3)/(5-2))',
+			'(log(5, 3)-6)+(sin(3)/(5-2))',
 			['(', 'log', '(', 5.0, ',', 3.0, ')', '-', 6.0, ')', '+', '(', 'sin', '(', 3.0, ')', '/', '(', 5.0, '-', 2.0, ')', ')'],
 			[5.0, 3.0, 'log', 6.0, '-', 3.0, 'sin', 5.0, 2.0, '-', '/', '+'],
 			('+', ('-', ('log', 5.0, 3.0), 6.0), ('/', 3.0, ('-', 5.0, 2.0))),
