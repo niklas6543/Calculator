@@ -337,9 +337,27 @@ digraph formel
 
 			elif isinstance(p, Variable):
 				try:
-					stack.append(kwargs[p.value])
+					#check of valid entry and that the variable exist
+					varValue = kwargs[p.value]
+					if isinstance(varValue, str):
+						content = ''
+						for s in varValue:
+							if s == ',':
+								s = '.'
+							
+							content += s
+						
+					
+						varValue = float(content)
+
+					
+					stack.append(varValue)
+					
 				except KeyError:
 					raise FormelCalculateException("%s is not defined" % (p.value))
+
+				except ValueError:
+					raise FormelCalculateException("'%s' your entry is not valid" % (kwargs[p.value]))
 			else:
 				stack.append(p)
 
@@ -381,7 +399,7 @@ if __name__ == "__main__":
 
 	#print(Formel('sin cos3+4').asUPN())
 	#print(Formel('cos3)').asUPN())
-	print(Formel('1,2+3').calculate())
+	print(Formel('x+y').calculate(x=1, y=2))
 	print('#')
 	#calculate(a = 2, x24xsin = 1))
 	#calculate(a = 42, x = 1))

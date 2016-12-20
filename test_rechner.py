@@ -27,10 +27,14 @@ class TestConvert(unittest.TestCase):
 		self.assertEqual(Formel('-10^-1').calculate(),  -0.1)
 		self.assertEqual(Formel('10*a-x24x+1').calculate(a = 2, x24x = 1), 18)
 		self.assertEqual(Formel('1,2').calculate(), 1.2)
-		
+		self.assertEqual(Formel('x').calculate(x='1,2'), 1.2)	
+		self.assertEqual(Formel('x+y').calculate(x='1,2', y=3), 4.2)	
+	
 	def test_error(self):
 		upn = lambda f:Formel(f).asUPN()
 		calc = lambda f:Formel(f).calculate(a = 42)
+		calcErr = lambda f:Formel(f).calculate(x = 'abc')
+		
 		self.assertRaisesRegex(FormelParseException, "right parenthesis found but no left", upn, "3+4)")
 		self.assertRaisesRegex(FormelParseException, "syntax error near: *", upn, "7*")
 #		self.assertRaisesRegex(FormelParseException, "duplicate operator found", upn, "(3*/")
@@ -43,6 +47,7 @@ class TestConvert(unittest.TestCase):
 		self.assertRaisesRegex(FormelCalculateException, "x is not defined", calc, "10*a-x")
 		self.assertRaisesRegex(FormelParseException, "syntax error near: +", upn, "a^2+")
 		self.assertRaisesRegex(FormelParseException, "unknown symbol like: \$", upn, "a^2$")
+		self.assertRaisesRegex(FormelCalculateException, "'abc' your entry is not valid", calcErr, "x")
 
 if __name__ == "__main__":
 	unittest.main()
