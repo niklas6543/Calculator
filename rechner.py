@@ -162,7 +162,7 @@ class Formel:
 							raise FormelParseException('duplicate operator found')
 					else:
 						#check the stack list of right operators
-						while len(stack) > 0 and op[stack[-1]] > op[f]:
+						while len(stack) > 0 and op[stack[-1]] >= op[f]:
 							output.append(stack.pop())
 						stack.append(f)
 				elif f == '(':
@@ -314,7 +314,6 @@ digraph formel
 		"""
 		self.asUPN()
 		stack = []
-		
 		for p in self._UPN:
 			if isinstance(p, str) and p in Formel.OPERATOREN:
 				b = stack.pop()
@@ -399,7 +398,7 @@ if __name__ == "__main__":
 
 	#print(Formel('sin cos3+4').asUPN())
 	#print(Formel('cos3)').asUPN())
-	print(Formel('x+y').calculate(x=1, y=2))
+	print(Formel('1-2-3').calculate())
 	print('#')
 	#calculate(a = 2, x24xsin = 1))
 	#calculate(a = 42, x = 1))
@@ -408,8 +407,8 @@ if __name__ == "__main__":
 		(
 			'3+4 * 5+8',
 			[3.0, '+', 4.0, '*', 5.0, '+', 8.0],
-			[3.0, 4.0, 5.0, '*', 8.0, '+', '+'],
-			('+', 3.0, ('+', ('*', 4.0, 5.0), 8.0)),
+			[3.0, 4.0, 5.0, '*', '+', 8.0, '+'],
+			('+', ('+', 3.0, ('*', 4.0, 5.0)), 8.0),
 			31.0,
 		),
 		(
